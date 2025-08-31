@@ -163,7 +163,7 @@ def build_parser() -> SmartParser:
     # file
     p_file = sub.add_parser(
         "file",
-        help="Build a bash script or one-line command from a single Python file",
+        help="Build a bash script or command from a single Python file",
         description=(
             "Compile one Python source file into a bash script that runs it via `python -c`,\n"
             "optionally embedding compressed source."
@@ -173,7 +173,7 @@ def build_parser() -> SmartParser:
     p_file.add_argument("-o", "--out", help="Write output to this path; prints to STDOUT if omitted")
     p_file.add_argument("--plain-text", action="store_true", help="Embed source as plain text (no compression)")
     p_file.add_argument("--shebang", default="/usr/bin/env bash", help="Shebang line for script output")
-    p_file.add_argument("--one-line", action="store_true", help="Output a one-line command instead of a script")
+    p_file.add_argument("--one-line", action="store_true", help="Output a command instead of a script with a shebang")
     add_common_flags(p_file)
     p_file.set_defaults(func=handle_file)
 
@@ -200,7 +200,7 @@ def build_parser() -> SmartParser:
     p_mod.add_argument("--zip-compresslevel", type=int, help="Compression level (varies by method)")
     p_mod.add_argument("-o", "--out", help="Write output to this path; prints to STDOUT if omitted")
     p_mod.add_argument("--shebang", default="/usr/bin/env bash", help="Shebang line for script output")
-    p_mod.add_argument("--one-line", action="store_true", help="Output a one-line command instead of a script")
+    p_mod.add_argument("--one-line", action="store_true", help="Output a command instead of a script with a shebang")
     add_common_flags(p_mod)
     p_mod.set_defaults(func=handle_module)
 

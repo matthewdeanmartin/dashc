@@ -50,12 +50,12 @@ import sys
 print("HELLO_FILE", "args:", sys.argv[1:])
 PY
 
-log "Generate one-line command from single file"
+log "Generate shebang-less command from single file"
 ONE_LINE_CMD="$($DASHC_RUN file "$TMPDIR/hello_file.py" --one-line)"
-echo "Generated one-line command:"
+echo "Generated shebang-less command:"
 echo "$ONE_LINE_CMD"
 
-log "Execute the one-line command (passes args)"
+log "Execute the shebang-less command (passes args)"
 set +e
 bash -c "$ONE_LINE_CMD world 123"
 RC1=$?
@@ -130,7 +130,7 @@ echo "Exit code: $RC5"
 
 # --- Summary ---------------------------------------------------------------
 log "Summary of exit codes (non-zero would indicate an execution problem)"
-printf "one-line: %d | file-script: %d | module-main: %d | module-func: %d | plain-text: %d\n" \
+printf "shebang-less: %d | file-script: %d | module-main: %d | module-func: %d | plain-text: %d\n" \
   "$RC1" "$RC2" "$RC3" "$RC4" "$RC5"
 
 # Minimal check: all executions should have succeeded (0)
