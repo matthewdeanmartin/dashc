@@ -1,1 +1,0 @@
-print("'h\ne\tl\'lo'")

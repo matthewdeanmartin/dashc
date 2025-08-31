@@ -1,7 +1,4 @@
 import shutil
-import sys
-
-import pytest
 
 from dashc.validate_syntax import validate_bash_syntax, validate_python_syntax
 

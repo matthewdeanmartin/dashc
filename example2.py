@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from pathlib import Path
 
 from dashc.core import b64z, make_python_c, render_wrapper_zip

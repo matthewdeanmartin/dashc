@@ -2,9 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
-from dashc.core import DashCException, b64z, render
+from dashc.core import b64z, render
 from dashc.single_file import dashc as dashc_single
 from dashc.single_module import COMPRESSION_MAP, _find_main_package, dashc_module, dir_to_zip_bytes
 from dashc.validate_syntax import validate_bash_syntax

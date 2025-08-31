@@ -10,6 +10,8 @@
 │   ├── wrapper_plain.py.j2
 │   ├── wrapper_zip.py.j2
 │   └── wrapper_zip_with_data.py.j2
+├── utils/
+│   └── cli_suggestions.py
 ├── validate_syntax.py
 ├── __about__.py
 └── __main__.py
@@ -170,26 +172,52 @@ COMPRESSION_MAP = {
 }
 
 
-def dir_to_zip_bytes(
-    src_dir: Path,
-    compression: int = zipfile.ZIP_DEFLATED,
-    compresslevel: int | None = None,
-) -> bytes:
-    """Create a ZIP (bytes) of *src_dir contents* (recursive)."""
+def dir_to_zip_bytes(src_dir: Path, compression=zipfile.ZIP_DEFLATED, compresslevel=None) -> bytes:
     buf = io.BytesIO()
-    with zipfile.ZipFile(buf, mode="w", compression=compression, compresslevel=compresslevel) as zf:
+    with zipfile.ZipFile(buf, "w", compression=compression, compresslevel=compresslevel) as zf:
         for p in src_dir.rglob("*"):
             if p.is_file():
-                arcname = p.relative_to(src_dir).as_posix()
-                zf.writestr(arcname, p.read_bytes())
+                # Prefix with the directory name (so "mypkg/cli.py" etc.)
+                arcname = Path(src_dir.name) / p.relative_to(src_dir)
+                zf.writestr(arcname.as_posix(), p.read_bytes())
     return buf.getvalue()
+
+
+# def dir_to_zip_bytes(
+#     src_dir: Path,
+#     compression: int = zipfile.ZIP_DEFLATED,
+#     compresslevel: int | None = None,
+# ) -> bytes:
+#     """Create a ZIP (bytes) of *src_dir contents* (recursive)."""
+#     buf = io.BytesIO()
+#     with zipfile.ZipFile(buf, mode="w", compression=compression, compresslevel=compresslevel) as zf:
+#         for p in src_dir.rglob("*"):
+#             if p.is_file():
+#                 arcname = p.relative_to(src_dir).as_posix()
+#                 zf.writestr(arcname, p.read_bytes())
+#     return buf.getvalue()
 
 
 def _find_main_package(src_dir: Path) -> str:
     """Find a default package under src_dir containing __main__.py."""
     candidates: list[str] = []
+    # If src_dir itself is the package root, prefer it
+    if (src_dir / "__init__.py").exists() and (src_dir / "__main__.py").exists():
+        return src_dir.name  # e.g., "mypkg"
+
     for pkg_dir in sorted([d for d in src_dir.rglob("*") if d.is_dir()]):
         if (pkg_dir / "__main__.py").exists():
+            rel = pkg_dir.relative_to(src_dir)
+            if not rel.parts:  # Top-level __main__.py
+                candidates.append("__main__")
+            else:
+                candidates.append(".".join(rel.parts))
+
+    if not candidates and src_dir.is_dir():
+        # uh oh. This is probably is the module, not the parent of the module.
+        pkg_dir = src_dir
+        if (pkg_dir / "__main__.py").exists():
+            print(f"Found backup : {(pkg_dir / '__main__.py')}")
             rel = pkg_dir.relative_to(src_dir)
             if not rel.parts:  # Top-level __main__.py
                 candidates.append("__main__")
@@ -313,16 +341,269 @@ def validate_bash_syntax(code: str) -> bool:
 ```python
 """Metadata for dashc."""
 
-__all__ = ["__title__", "__version__", "__description__", "__requires_python__"]
+__all__ = ["__title__", "__version__", "__description__", "__requires_python__", "__status__"]
 
 __title__ = "dashc"
 __version__ = "0.1.0"
 __description__ = "Tool to generate python -c bash as if it were a package format."
 __requires_python__ = ">=3.8"
+__status__ = "4 - Beta"
 ```
 ## File: __main__.py
 ```python
-print("sooon...")
+from __future__ import annotations
+
+import argparse
+import logging
+import logging.config
+import sys
+from dataclasses import dataclass
+from enum import IntEnum
+from pathlib import Path
+
+import argcomplete
+
+# Local imports
+from dashc import __about__
+from dashc.custom_exceptions import DashCException
+from dashc.single_file import dashc as build_single_file
+from dashc.single_module import dashc_module as build_module
+from dashc.utils.cli_suggestions import SmartParser
+
+
+# -----------------------------
+# Exit codes (bash-friendly)
+# -----------------------------
+class ExitCode(IntEnum):
+    OK = 0
+    BAD_USAGE = 2
+    CONFIG = 10
+    RUNTIME = 1
+    INTERRUPTED = 130
+
+
+# -----------------------------
+# Logging config helper
+# -----------------------------
+
+
+def _generate_logging_config(level: str = "INFO") -> dict:
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "std": {
+                "format": "%(levelname)s: %(message)s",
+            }
+        },
+        "handlers": {
+            "stderr": {
+                "class": "logging.StreamHandler",
+                "level": level,
+                "formatter": "std",
+                "stream": "ext://sys.stderr",
+            }
+        },
+        "root": {"handlers": ["stderr"], "level": level},
+    }
+
+
+# -----------------------------
+# Dataclasses for shared options
+# -----------------------------
+@dataclass
+class GlobalOpts:
+    verbose: bool
+    quiet: bool
+    dry_run: bool
+
+
+# -----------------------------
+# Handlers
+# -----------------------------
+
+
+def _resolve_shebang(one_line: bool, shebang: str | None) -> str | None:
+    return None if one_line else (shebang or "/usr/bin/env bash")
+
+
+def handle_file(args: argparse.Namespace, g: GlobalOpts) -> int:
+    src = Path(args.path)
+    if not src.is_file():
+        logging.error("Input file does not exist: %s", src)
+        return int(ExitCode.CONFIG)
+
+    try:
+        script_or_cmd = build_single_file(
+            source_path=src,
+            plain_text=args.plain_text,
+            shebang=_resolve_shebang(args.one_line, args.shebang),
+        )
+    except DashCException as e:
+        logging.error(str(e))
+        return int(ExitCode.RUNTIME)
+
+    if args.out:
+        out_path = Path(args.out)
+        if g.dry_run:
+            logging.info("DRY-RUN: would write script to %s", out_path)
+        else:
+            out_path.write_text(script_or_cmd, encoding="utf-8")
+            out_path.chmod(0o755)
+            logging.info("Wrote script to %s", out_path)
+    else:
+        # Print to STDOUT (so users can pipe into bash if they want)
+        print(script_or_cmd)
+    return int(ExitCode.OK)
+
+
+def handle_module(args: argparse.Namespace, g: GlobalOpts) -> int:
+    src_dir = Path(args.dir)
+    if not src_dir.is_dir():
+        logging.error("Input directory does not exist: %s", src_dir)
+        return int(ExitCode.CONFIG)
+
+    try:
+        script_or_cmd = build_module(
+            src_dir=src_dir,
+            entrypoint=args.entrypoint,
+            shebang=_resolve_shebang(args.one_line, args.shebang),
+            zip_compression=args.zip_compression,
+            zip_compresslevel=args.zip_compresslevel,
+        )
+    except DashCException as e:
+        logging.error(str(e))
+        return int(ExitCode.RUNTIME)
+    except ValueError as e:
+        logging.error(str(e))
+        return int(ExitCode.BAD_USAGE)
+
+    if args.out:
+        out_path = Path(args.out)
+        if g.dry_run:
+            logging.info("DRY-RUN: would write script to %s", out_path)
+        else:
+            out_path.write_text(script_or_cmd, encoding="utf-8")
+            out_path.chmod(0o755)
+            logging.info("Wrote script to %s", out_path)
+    else:
+        print(script_or_cmd)
+    return int(ExitCode.OK)
+
+
+# -----------------------------
+# Parser wiring
+# -----------------------------
+
+
+def add_common_flags(p: argparse.ArgumentParser) -> None:
+    p.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
+    p.add_argument("-q", "--quiet", action="store_true", help="Silence non-error logs")
+    p.add_argument("--dry-run", action="store_true", help="Do not write files; describe what would happen")
+
+
+def build_parser() -> SmartParser:
+    parser = SmartParser(
+        prog=__about__.__title__,
+        description=__about__.__description__,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__about__.__version__}")
+
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    # file
+    p_file = sub.add_parser(
+        "file",
+        help="Build a bash script or one-line command from a single Python file",
+        description=(
+            "Compile one Python source file into a bash script that runs it via `python -c`,\n"
+            "optionally embedding compressed source."
+        ),
+    )
+    p_file.add_argument("path", help="Path to a Python source file")
+    p_file.add_argument("-o", "--out", help="Write output to this path; prints to STDOUT if omitted")
+    p_file.add_argument("--plain-text", action="store_true", help="Embed source as plain text (no compression)")
+    p_file.add_argument("--shebang", default="/usr/bin/env bash", help="Shebang line for script output")
+    p_file.add_argument("--one-line", action="store_true", help="Output a one-line command instead of a script")
+    add_common_flags(p_file)
+    p_file.set_defaults(func=handle_file)
+
+    # module
+    p_mod = sub.add_parser(
+        "module",
+        help="Package a directory (package/app) and run a module/function",
+        description=(
+            "Zip a Python package/app directory in-memory and generate a script that either runs a module\n"
+            "(like `python -m pkg`) or imports a function (like `pkg.cli:main`)."
+        ),
+    )
+    p_mod.add_argument("dir", help="Path to the source directory (package root)")
+    p_mod.add_argument(
+        "--entrypoint",
+        help="Module or module:function to run. If omitted, auto-detect a package with __main__.py",
+    )
+    p_mod.add_argument(
+        "--zip-compression",
+        choices=["stored", "deflated", "bzip2", "lzma"],
+        default="deflated",
+        help="Compression method for embedded zip",
+    )
+    p_mod.add_argument("--zip-compresslevel", type=int, help="Compression level (varies by method)")
+    p_mod.add_argument("-o", "--out", help="Write output to this path; prints to STDOUT if omitted")
+    p_mod.add_argument("--shebang", default="/usr/bin/env bash", help="Shebang line for script output")
+    p_mod.add_argument("--one-line", action="store_true", help="Output a one-line command instead of a script")
+    add_common_flags(p_mod)
+    p_mod.set_defaults(func=handle_module)
+
+    return parser
+
+
+# -----------------------------
+# Main entry point
+# -----------------------------
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    argcomplete.autocomplete(parser)
+
+    args = parser.parse_args(argv)
+
+    # logging level
+    if getattr(args, "verbose", False):
+        level = "DEBUG"
+    elif getattr(args, "quiet", False):
+        level = "CRITICAL"
+    else:
+        level = "INFO"
+    logging.config.dictConfig(_generate_logging_config(level=level))
+
+    g = GlobalOpts(verbose=args.verbose, quiet=args.quiet, dry_run=getattr(args, "dry_run", False))
+
+    try:
+        rc = args.func(args, g)  # type: ignore[arg-type]
+        return int(rc)
+    except DashCException as e:
+        logging.error(str(e))
+        return int(ExitCode.RUNTIME)
+    except KeyboardInterrupt:
+        print("Interrupted.", file=sys.stderr)
+        return int(ExitCode.INTERRUPTED)
+    except SystemExit as e:
+        # Let argparse/SystemExit codes flow through (e.g., --help)
+        try:
+            return int(e.code)  # type: ignore[arg-type]
+        except Exception:
+            return int(ExitCode.BAD_USAGE)
+    except Exception as e:  # pragma: no cover - unexpected bug
+        logging.exception("unexpected error: %s", e)
+        return int(ExitCode.RUNTIME)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 ```
 ## File: templates\wrapper.py.j2
 ```
@@ -653,4 +934,43 @@ def _main():
 
 if __name__ == "__main__":
     _main()
+```
+## File: utils\cli_suggestions.py
+```python
+from __future__ import annotations
+
+import argparse
+import sys
+from difflib import get_close_matches
+
+
+class SmartParser(argparse.ArgumentParser):
+    def error(self, message: str):
+        # Detect "invalid choice: 'foo' (choose from ...)"
+        if "invalid choice" in message and "choose from" in message:
+            bad = message.split("invalid choice:")[1].split("(")[0].strip().strip("'\"")
+            choices_str = message.split("choose from")[1]
+            choices = [c.strip().strip(",)'") for c in choices_str.split() if c.strip(",)")]
+
+            tips = get_close_matches(bad, choices, n=3, cutoff=0.6)
+            if tips:
+                message += f"\n\nDid you mean: {', '.join(tips)}?"
+        self.print_usage(sys.stderr)
+        self.exit(2, f"{self.prog}: error: {message}\n")
+
+
+def cli(argv=None):
+    p = SmartParser(prog="mycli")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    for name in ["init", "install", "inspect", "index"]:
+        sp = sub.add_parser(name)
+        sp.set_defaults(func=lambda args, n=name: print(f"ran {n}"))
+
+    args = p.parse_args(argv)
+    args.func(args)
+
+
+if __name__ == "__main__":
+    cli()
 ```

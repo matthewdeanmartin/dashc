@@ -1,15 +1,11 @@
 import base64
 import io
 import json
-import subprocess
-import sys
 import zipfile
 import zlib
-from pathlib import Path
 
 import jinja2
 import pytest
-from jinja2 import TemplateSyntaxError
 
 from dashc.core import (
     b64z,

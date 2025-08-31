@@ -7,16 +7,14 @@ import sys
 from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
-from typing import Optional
+
+import argcomplete
 
 # Local imports
 from dashc import __about__
 from dashc.custom_exceptions import DashCException
 from dashc.single_file import dashc as build_single_file
 from dashc.single_module import dashc_module as build_module
-
-import argcomplete
-
 from dashc.utils.cli_suggestions import SmartParser
 
 
@@ -34,6 +32,7 @@ class ExitCode(IntEnum):
 # -----------------------------
 # Logging config helper
 # -----------------------------
+
 
 def _generate_logging_config(level: str = "INFO") -> dict:
     return {
@@ -56,8 +55,6 @@ def _generate_logging_config(level: str = "INFO") -> dict:
     }
 
 
-
-
 # -----------------------------
 # Dataclasses for shared options
 # -----------------------------
@@ -72,7 +69,8 @@ class GlobalOpts:
 # Handlers
 # -----------------------------
 
-def _resolve_shebang(one_line: bool, shebang: Optional[str]) -> Optional[str]:
+
+def _resolve_shebang(one_line: bool, shebang: str | None) -> str | None:
     return None if one_line else (shebang or "/usr/bin/env bash")
 
 
@@ -144,6 +142,7 @@ def handle_module(args: argparse.Namespace, g: GlobalOpts) -> int:
 # Parser wiring
 # -----------------------------
 
+
 def add_common_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
     p.add_argument("-q", "--quiet", action="store_true", help="Silence non-error logs")
@@ -211,6 +210,7 @@ def build_parser() -> SmartParser:
 # -----------------------------
 # Main entry point
 # -----------------------------
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()

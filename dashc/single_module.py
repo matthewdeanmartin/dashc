@@ -17,6 +17,7 @@ COMPRESSION_MAP = {
     "lzma": zipfile.ZIP_LZMA,
 }
 
+
 def dir_to_zip_bytes(src_dir: Path, compression=zipfile.ZIP_DEFLATED, compresslevel=None) -> bytes:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=compression, compresslevel=compresslevel) as zf:
@@ -26,6 +27,7 @@ def dir_to_zip_bytes(src_dir: Path, compression=zipfile.ZIP_DEFLATED, compressle
                 arcname = Path(src_dir.name) / p.relative_to(src_dir)
                 zf.writestr(arcname.as_posix(), p.read_bytes())
     return buf.getvalue()
+
 
 # def dir_to_zip_bytes(
 #     src_dir: Path,

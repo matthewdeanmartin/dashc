@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-import ast
 import base64
 import json
 import subprocess
-import sys
 import zipfile
 import zlib
 from pathlib import Path
 from typing import Any
 
 import pytest
-from jinja2 import Environment, PackageLoader
 
 from dashc.core import (
     b64z,
@@ -242,7 +239,7 @@ class TestSingleModule:
 
             # Verify the inner ZIP structure
             with zipfile.ZipFile(Path(tmp_path / "extracted.zip"), "r") as zf_verify:
-                namelist = zf_verify.namelist()
+                zf_verify.namelist()
                 # Due to how we nested ZIPs, just verify we got bytes
                 assert len(data) > 0
 
