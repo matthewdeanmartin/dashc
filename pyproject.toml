@@ -1,8 +1,11 @@
 [project]
 name = "dashc"
-version = "0.1.0"
+version = "0.1.1"
 description = "Tool to generate python -c bash as if it were a package format."
 requires-python = ">=3.8"
+readme = "README.md"
+authors = [{ name = "Matthew Martin", email = "matthewdeanmartin@gmail.com" }]
+keywords = ["bash", "packaging"]
 dependencies = [
     "jinja2",
     "orjson",
@@ -24,6 +27,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
+
+[project.urls]
+Repository = "https://github.com/matthewdeanmartin/dashc"
+Changelog = "https://github.com/matthewdeanmartin/dashc/blob/main/CHANGELOG.md"
+
+homepage = "https://github.com/matthewdeanmartin/dashc"
+issues = "https://github.com/matthewdeanmartin/dashc/issues/"
+
 
 
 
