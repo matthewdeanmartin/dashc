@@ -1,6 +1,3 @@
-{# File: templates/wrapper_zip.py.j2 #}
-{# NOTE: Use DOUBLE QUOTES ONLY in this template... #}
-
 import base64, io, importlib, importlib.abc, importlib.machinery, runpy, sys, zipfile, zlib
 
 
@@ -52,7 +49,7 @@ class _InMemZipLoader(importlib.abc.InspectLoader, importlib.abc.ResourceReader)
             # e.g., for arc_path "my_pkg/__init__.py", this returns "my_pkg"
             return self._arc_path.rpartition("/")[0]
         else:
-            # For a module, it's the package it belongs to
+            # For a module, it is the package it belongs to
             # e.g., for fullname "my_pkg.utils", this returns "my_pkg"
             return self._fullname.rpartition(".")[0].replace(".", "/")
 
@@ -82,7 +79,7 @@ class _InMemZipLoader(importlib.abc.InspectLoader, importlib.abc.ResourceReader)
         pkg_root = self._get_package_root()
         resource_path = f"{pkg_root}/{resource}" if pkg_root else resource
         if resource_path not in self._zmap:
-            raise FileNotFoundError(f"Resource '{resource}' not found in package '{self._fullname}'")
+            raise FileNotFoundError(f"Resource \"{resource}\" not found in package \"{self._fullname}\"")
         return io.BytesIO(self._zmap[resource_path])
 
     def resource_path(self, resource: str):
@@ -97,7 +94,7 @@ class _InMemZipLoader(importlib.abc.InspectLoader, importlib.abc.ResourceReader)
 
     def get_data(self, path: str) -> bytes:
         """Return the bytes for the resource specified by path."""
-        # For zip archives, 'path' is the full, archive-relative path.
+        # For zip archives, "path" is the full, archive-relative path.
         # importlib.resources handles constructing this path correctly for us.
         try:
             return self._zmap[path]
@@ -150,7 +147,7 @@ def _main():
         module = importlib.import_module("{{ import_module }}")
         func = getattr(module, "{{ call_function }}")
     except (ImportError, AttributeError) as e:
-        print(f"Error: Could not find entrypoint '{{ call_function }}' in '{{ import_module }}'.", file=sys.stderr)
+        print(f"Error: Could not find entrypoint \"{{ call_function }}\" in \"{{ import_module }}\".", file=sys.stderr)
         print(f"Underlying error: {e}", file=sys.stderr)
         sys.exit(1)
 

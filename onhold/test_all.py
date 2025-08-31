@@ -2,21 +2,22 @@
 Unit tests for the improved make_dash_c module.
 """
 
-import pytest
-import tempfile
 import pathlib
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Assuming the main module is imported as make_dash_c
-from dashc.make_dash_c import (
-    package_to_dash_c,
+from dashc.core import (
     CompressionMode,
     InputSource,
     _escape_for_shell,
+    _get_runner_template,
     _serialize_data,
-    _get_runner_template
+    package_to_dash_c,
 )
 
 

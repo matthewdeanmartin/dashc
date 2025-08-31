@@ -1,6 +1,4 @@
 # Save this file as: templates/wrapper_zip.py.j2
-# NOTE: Use DOUBLE QUOTES ONLY in this template so the outer bash command can
-# safely single-quote the entire -c payload without extra escaping.
 
 import base64, io, importlib.abc, importlib.machinery, runpy, sys, zipfile, zlib
 
@@ -113,7 +111,7 @@ def _main():
         module = importlib.import_module("{{ import_module }}")
         func = getattr(module, "{{ call_function }}")
     except (ImportError, AttributeError) as e:
-        print(f"Error: Could not find entrypoint '{{ call_function }}' in '{{ import_module }}'.", file=sys.stderr)
+        print(f"Error: Could not find entrypoint \"{{ call_function }}\" in \"{{ import_module }}\".", file=sys.stderr)
         print(f"Underlying error: {e}", file=sys.stderr)
         sys.exit(1)
 

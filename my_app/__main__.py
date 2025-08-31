@@ -2,6 +2,7 @@
 import importlib.resources
 import json
 
+
 def load_config():
     # This is the modern, correct way to read package data
     json_str = importlib.resources.read_text("my_app", "config.json")

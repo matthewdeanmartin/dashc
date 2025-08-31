@@ -1,9 +1,8 @@
 import subprocess
 from pathlib import Path
 
+from dashc.core import b64z, make_python_c, render_wrapper_zip
 from dashc.single_module import dir_to_zip_bytes
-from dashc.core import  b64z, render_wrapper_zip, make_python_c
-
 
 # -----------------------------
 # Demo harness (no argparse yet)

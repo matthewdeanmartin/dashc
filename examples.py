@@ -1,6 +1,8 @@
-import dashc
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import dashc
+
 
 def main():
     # 1. Write example source.py

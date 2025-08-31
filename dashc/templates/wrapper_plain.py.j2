@@ -1,0 +1,7 @@
+# The source code is embedded here as a string literal created by json.dumps()
+_source = {{ escaped_source_code }}
+
+_globals = {"__name__": "__main__", "__file__": "{{ virtual_filename }}"}
+
+# Use compile so tracebacks point at the virtual filename and line numbers match.
+exec(compile(_source, "{{ virtual_filename }}", "exec"), _globals, _globals)

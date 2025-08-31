@@ -12,14 +12,14 @@ from __future__ import annotations
 
 import base64
 import gzip
+import importlib.util
 import json
 import pathlib
 import shlex
+import sys
 import textwrap
 from enum import Enum
 from typing import Dict, Union
-import importlib.util
-import sys
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -183,8 +183,8 @@ def package_to_dash_c(
 
 def main() -> None:
     """Example usage and testing."""
-    import tempfile
     import os
+    import tempfile
 
     # Example: Create a simple app structure for testing
     with tempfile.TemporaryDirectory() as tmpdir:
