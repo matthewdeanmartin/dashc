@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+python -c 'import base64, zlib
+
+def _decompress_b64_to_text(s):
+    return zlib.decompress(base64.b64decode(s)).decode("utf-8")
+
+# The payload is just base64 text. Triple-double-quoted to avoid single quotes entirely.
+_PAYLOAD_B64 = """eNrLzC3ILypRKK4s5iooyswr0VDycPXx8Y938/RxVdJRUEosSi+2AjKACvSA7LJoQ6tYTS4A8JARBw=="""
+
+# Later: we can switch behavior here to import/run main from a module or package.
+# For now: execute the decompressed source as __main__ with a nice filename for tracebacks.
+_source = _decompress_b64_to_text(_PAYLOAD_B64)
+
+_globals = {"__name__": "__main__", "__file__": "hello_file.py"}
+# Use compile so tracebacks point at the virtual filename and line numbers match post-decompression.
+exec(compile(_source, "hello_file.py", "exec"), _globals, _globals)' $@
