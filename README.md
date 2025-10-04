@@ -2,6 +2,15 @@
 
 Tool to generate `python -c` bash scripts as if they were a package format.
 
+[![tests](https://github.com/matthewdeanmartin/dashc/actions/workflows/build.yml/badge.svg)
+](https://github.com/matthewdeanmartin/dashc/actions/workflows/tests.yml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/matthewdeanmartin/dashc/main.svg)
+](https://results.pre-commit.ci/latest/github/matthewdeanmartin/dashc/main)
+[![Downloads](https://img.shields.io/pypi/dm/dashc)](https://pypistats.org/packages/dashc)
+[![Python Version](https://img.shields.io/pypi/pyversions/dashc)
+![Release](https://img.shields.io/pypi/v/dashc)
+](https://pypi.org/project/dashc/)
+
 ---
 
 ## About
