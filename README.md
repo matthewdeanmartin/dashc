@@ -15,8 +15,9 @@ Tool to generate `python -c` bash scripts as if they were a package format.
 
 ## About
 
-`dashc` lets you bundle Python source code (a single file or an entire package) into a executable shell script.
-Instead of shipping loose files, you can hand over a bash command (or `.sh` script) that self-contains your Python logic and runs without needing to touch the filesystem.
+`dashc` lets you bundle Python source code (a single file or an entire package) into an executable shell script.
+Instead of shipping loose files, you can hand over a bash command (or `.sh` script) that self-contains your Python logic
+and runs without needing to touch the filesystem.
 
 Features:
 
@@ -95,6 +96,7 @@ dashc module ./send_email --entrypoint send_email.cli:main --out run_cli.sh
 
 ## Prior Art / Alternatives
 
-* **zipapp** (`python -m zipapp`) – Standard library tool for packaging Python code into `.pyz` archives runnable with Python.
+* **zipapp** (`python -m zipapp`) – Standard library tool for packaging Python code into `.pyz` archives runnable with
+  Python.
 * **shiv**, **pex** – Build self-contained Python executables with full dependency resolution.
 * **pyinstaller** – Freezes Python programs into standalone executables.
