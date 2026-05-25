@@ -90,12 +90,13 @@ dev = [
 
 [tool.uv]
 default-groups = "all"
-universal = true
 
 [tool.uv.sources]
 dashc = { workspace = true }
 
 
+[tool.uv.pip]
+universal = true
 [project.scripts]
 dashc = "dashc.__main__:main"
 
