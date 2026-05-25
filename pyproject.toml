@@ -90,6 +90,7 @@ dev = [
 
 [tool.uv]
 default-groups = "all"
+universal = true
 
 [tool.uv.sources]
 dashc = { workspace = true }
