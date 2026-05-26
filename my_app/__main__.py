@@ -8,5 +8,6 @@ def load_config():
     json_str = importlib.resources.read_text("my_app", "config.json")
     return json.loads(json_str)
 
+
 config = load_config()
 print(f"Loaded config: {config['setting']}")

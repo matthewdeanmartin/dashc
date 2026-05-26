@@ -9,6 +9,7 @@ from dashc.single_module import dir_to_zip_bytes
 # Demo harness (no argparse yet)
 # -----------------------------
 
+
 def write_demo_package(root: Path) -> str:
     pkg = root / "demoapp"
     pkg.mkdir(parents=True, exist_ok=True)
