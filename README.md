@@ -100,3 +100,10 @@ dashc module ./send_email --entrypoint send_email.cli:main --out run_cli.sh
   Python.
 * **shiv**, **pex** – Build self-contained Python executables with full dependency resolution.
 * **pyinstaller** – Freezes Python programs into standalone executables.
+
+## Project Links
+
+- [GitHub](https://github.com/matthewdeanmartin/dashc)
+- [PyPI](https://pypi.org/project/dashc/)
+- [Bug Tracker](https://github.com/matthewdeanmartin/dashc/issues)
+- [Change Log](https://github.com/matthewdeanmartin/dashc/blob/main/CHANGELOG.md)
