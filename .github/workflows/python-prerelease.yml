@@ -13,6 +13,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PIP_ONLY_BINARY: ":all:"
+
 jobs:
   verify:
     runs-on: ${{ matrix.os }}
@@ -42,13 +45,18 @@ jobs:
           version: "0.12.23"
       - name: Install locked dependencies
         if: matrix.dependencies == 'locked'
-        run: uv sync --locked --all-extras --python "${{ matrix.python }}"
+        shell: bash
+        run: |
+          uv venv .venv --python "${{ matrix.python }}"
+          uv export --locked --all-extras --no-emit-workspace --no-hashes --format requirements-txt --output-file .venv/verification-requirements.txt
+          uv pip install --only-binary :all: --no-cache --prerelease disallow -r .venv/verification-requirements.txt
+          uv pip install --only-binary :all: --no-cache --no-deps -e .
       - name: Install with dependency prereleases allowed
         if: matrix.dependencies == 'prerelease'
         shell: bash
         run: |
           uv venv .venv --python "${{ matrix.python }}"
-          uv pip install --upgrade --prerelease allow --group dev -e .
+          uv pip install --only-binary :all: --no-cache --upgrade --prerelease allow --group dev -e .
       - name: Verify interpreter and developer tool imports
         run: >-
           uv run --no-sync --python "${{ matrix.python }}" python -c
