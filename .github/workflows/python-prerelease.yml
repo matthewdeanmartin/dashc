@@ -1,0 +1,63 @@
+name: Python prerelease verification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "pyproject.toml"
+      - "uv.lock"
+      - "dashc/**"
+      - "tests/**"
+      - ".github/workflows/python-prerelease.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.14", "3.15"]
+        dependencies: [locked]
+        include:
+          - os: ubuntu-latest
+            python: "3.15"
+            dependencies: prerelease
+          - os: windows-latest
+            python: "3.15"
+            dependencies: prerelease
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python }}
+          allow-prereleases: true
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.12.23"
+      - name: Install locked dependencies
+        if: matrix.dependencies == 'locked'
+        run: uv sync --locked --all-extras --python "${{ matrix.python }}"
+      - name: Install with dependency prereleases allowed
+        if: matrix.dependencies == 'prerelease'
+        shell: bash
+        run: |
+          uv venv .venv --python "${{ matrix.python }}"
+          uv pip install --upgrade --prerelease allow --group dev -e .
+      - name: Verify interpreter and developer tool imports
+        run: >-
+          uv run --no-sync --python "${{ matrix.python }}" python -c
+          "import sys; print(sys.version); import gha_update._core;
+          import mkdocstrings; import mkdocs_autorefs;
+          import httpx; assert hasattr(httpx, 'RequestError')"
+      - name: Verify documentation CLI
+        run: uv run --no-sync --python "${{ matrix.python }}" python -m mkdocs --version
+      - name: Run tests
+        run: >-
+          uv run --no-sync --python "${{ matrix.python }}" pytest tests -q
+          --timeout=30 --session-timeout=600 -p no:benchmark

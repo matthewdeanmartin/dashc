@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 
 [project.urls]
@@ -50,9 +51,12 @@ dev = [
     "git2md; python_version >= '3.10'",
     "pyclean; python_version >= '3.12'",
     "strip-docs>=1.0; python_version >= '3.12'",
+    # gha-update and troml-dev-status require the HTTPX 0.x API.
+    # https://github.com/davidism/gha-update/issues/39
+    "httpx<1; python_version >= '3.12'",
     "gha-update; python_version >= '3.12'",
     "mkdocstrings[python]",
-    "mkdocs; python_version >= '3.12'",
+    "mkdocs<2; python_version >= '3.12'",
     "mdformat",
     # plugin finder
     "packaging; python_version >= '3.8'",
