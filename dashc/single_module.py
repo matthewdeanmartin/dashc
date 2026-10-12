@@ -74,8 +74,7 @@ def _find_main_package(src_dir: Path) -> str:
         raise RuntimeError("No package with __main__.py found to use as default entrypoint.")
     if len(candidates) > 1:
         print(
-            f"Warning: Multiple packages with __main__.py found: {candidates}. "
-            f"Using '{candidates[0]}'. Specify an entrypoint for clarity."
+            f"Warning: Multiple packages with __main__.py found: {candidates}. Using '{candidates[0]}'. Specify an entrypoint for clarity."
         )
     return candidates[0]
 
@@ -108,7 +107,7 @@ def dashc_module(
     compression_method = COMPRESSION_MAP.get(zip_compression.lower())
     if compression_method is None:
         raise ValueError(
-            f"Unknown zip_compression: '{zip_compression}'. " f"Valid options are: {list(COMPRESSION_MAP.keys())}"
+            f"Unknown zip_compression: '{zip_compression}'. Valid options are: {list(COMPRESSION_MAP.keys())}"
         )
 
     zip_bytes = dir_to_zip_bytes(

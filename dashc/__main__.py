@@ -165,8 +165,7 @@ def build_parser() -> SmartParser:
         "file",
         help="Build a bash script or command from a single Python file",
         description=(
-            "Compile one Python source file into a bash script that runs it via `python -c`,\n"
-            "optionally embedding compressed source."
+            "Compile one Python source file into a bash script that runs it via `python -c`,\noptionally embedding compressed source."
         ),
     )
     p_file.add_argument("path", help="Path to a Python source file")
@@ -182,8 +181,7 @@ def build_parser() -> SmartParser:
         "module",
         help="Package a directory (package/app) and run a module/function",
         description=(
-            "Zip a Python package/app directory in-memory and generate a script that either runs a module\n"
-            "(like `python -m pkg`) or imports a function (like `pkg.cli:main`)."
+            "Zip a Python package/app directory in-memory and generate a script that either runs a module\n(like `python -m pkg`) or imports a function (like `pkg.cli:main`)."
         ),
     )
     p_mod.add_argument("dir", help="Path to the source directory (package root)")
