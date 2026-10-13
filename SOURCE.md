@@ -228,8 +228,7 @@ def _find_main_package(src_dir: Path) -> str:
         raise RuntimeError("No package with __main__.py found to use as default entrypoint.")
     if len(candidates) > 1:
         print(
-            f"Warning: Multiple packages with __main__.py found: {candidates}. "
-            f"Using '{candidates[0]}'. Specify an entrypoint for clarity."
+            f"Warning: Multiple packages with __main__.py found: {candidates}. Using '{candidates[0]}'. Specify an entrypoint for clarity."
         )
     return candidates[0]
 
@@ -262,7 +261,7 @@ def dashc_module(
     compression_method = COMPRESSION_MAP.get(zip_compression.lower())
     if compression_method is None:
         raise ValueError(
-            f"Unknown zip_compression: '{zip_compression}'. " f"Valid options are: {list(COMPRESSION_MAP.keys())}"
+            f"Unknown zip_compression: '{zip_compression}'. Valid options are: {list(COMPRESSION_MAP.keys())}"
         )
 
     zip_bytes = dir_to_zip_bytes(
@@ -342,23 +341,25 @@ def validate_bash_syntax(code: str) -> bool:
 """Metadata for dashc."""
 
 __all__ = [
+    "__credits__",
+    "__dependencies__",
+    "__description__",
+    "__keywords__",
+    "__readme__",
+    "__requires_python__",
+    "__status__",
     "__title__",
     "__version__",
-    "__description__",
-    "__requires_python__",
-    "__readme__",
-    "__credits__",
-    "__keywords__",
-    "__status__",
 ]
 
 __title__ = "dashc"
 __version__ = "0.1.1"
 __description__ = "Tool to generate python -c bash as if it were a package format."
-__requires_python__ = ">=3.8"
+__requires_python__ = ">=3.11"
 __readme__ = "README.md"
 __credits__ = [{"name": "Matthew Martin", "email": "matthewdeanmartin@gmail.com"}]
 __keywords__ = ["bash", "packaging"]
+__dependencies__ = ["jinja2", "orjson", "argcomplete"]
 __status__ = "4 - Beta"
 ```
 ## File: __main__.py
@@ -530,8 +531,7 @@ def build_parser() -> SmartParser:
         "file",
         help="Build a bash script or command from a single Python file",
         description=(
-            "Compile one Python source file into a bash script that runs it via `python -c`,\n"
-            "optionally embedding compressed source."
+            "Compile one Python source file into a bash script that runs it via `python -c`,\noptionally embedding compressed source."
         ),
     )
     p_file.add_argument("path", help="Path to a Python source file")
@@ -547,8 +547,7 @@ def build_parser() -> SmartParser:
         "module",
         help="Package a directory (package/app) and run a module/function",
         description=(
-            "Zip a Python package/app directory in-memory and generate a script that either runs a module\n"
-            "(like `python -m pkg`) or imports a function (like `pkg.cli:main`)."
+            "Zip a Python package/app directory in-memory and generate a script that either runs a module\n(like `python -m pkg`) or imports a function (like `pkg.cli:main`)."
         ),
     )
     p_mod.add_argument("dir", help="Path to the source directory (package root)")
@@ -952,6 +951,7 @@ if __name__ == "__main__":
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from difflib import get_close_matches
 
@@ -960,7 +960,14 @@ class SmartParser(argparse.ArgumentParser):
     def error(self, message: str):
         # Detect "invalid choice: 'foo' (choose from ...)"
         if "invalid choice" in message and "choose from" in message:
-            bad = message.split("invalid choice:")[1].split("(")[0].strip().strip("'\"")
+            # Python 3.15 appends its own hint: "invalid choice: 'foo', maybe you
+            # meant 'food'? (choose from ...)". Splitting on "(" would swallow that
+            # suffix into the bad token, so extract the quoted value with a regex.
+            match = re.search(r"invalid choice:\s*'([^']+)'", message)
+            if match:
+                bad = match.group(1)
+            else:
+                bad = message.split("invalid choice:")[1].split("(")[0].strip().strip("'\"")
             choices_str = message.split("choose from")[1]
             choices = [c.strip().strip(",)'") for c in choices_str.split() if c.strip(",)")]
 
